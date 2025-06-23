@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1>Reservas</h1>
+    <h1 class="text-4xl font-bold text-red-600">Hola Tailwind</h1>
   </div>
 </template>
 
