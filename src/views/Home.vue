@@ -1,13 +1,13 @@
 <template>
   <div
     class="w-screen h-screen bg-cover bg-center flex items-center justify-center"
-    style="background-image: url('/fondo.jpg')"
+    :style="{ backgroundImage: `url(${fondo})` }"
   >
     <div class="bg-white/90 rounded-3xl p-6 w-11/12 max-w-md text-center">
       <!-- Logos -->
       <div class="flex justify-between items-center mb-6">
-        <img src="/festa-logo.jpg" alt="Festa" class="h-16" />
-        <img src="/papos-logo.jpg" alt="Papos" class="h-16" />
+        <img :src="festaLogo" alt="Festa" class="h-16" />
+        <img :src="paposLogo" alt="Papos" class="h-16" />
       </div>
 
       <!-- Botones -->
@@ -28,16 +28,20 @@
       <div class="mt-8 text-white">
         <p class="text-sm text-gray-700">Síguenos</p>
         <div class="flex justify-center space-x-4 mt-2">
-          <img src="/facebook.svg" alt="Facebook" class="h-8" />
-          <img src="/instagram.svg" alt="Instagram" class="h-8" />
+          <img :src="facebookIcon" alt="Facebook" class="h-8" />
+          <img :src="instagramIcon" alt="Instagram" class="h-8" />
         </div>
       </div>
     </div>
   </div>
 </template>
 
-<script setup>
-// Sin lógica aún, todo es visual
+<script setup lang="ts">
+import festaLogo from '@/assets/festa-logo.jpg'
+import paposLogo from '@/assets/papos-logo.jpg'
+import fondo from '@/assets/fondo.jpg'
+import facebookIcon from '@/assets/facebook.svg'
+import instagramIcon from '@/assets/instagram.svg'
 </script>
 
 <style scoped>
