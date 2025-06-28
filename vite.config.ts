@@ -10,4 +10,8 @@ export default defineConfig({
       '@': path.resolve(__dirname, 'src'),
     },
   },
+  server: {
+    host: true, // <--- Esto permite conexiones externas (ej. desde tu celular)
+    port: 5173  
+  }
 })

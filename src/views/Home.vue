@@ -1,61 +1,44 @@
 <template>
   <div class="w-screen h-screen bg-cover bg-center flex items-center justify-center"
-    :style="{ backgroundImage: `url(${fondo})` }">
-    <!-- Overlay para oscurecer el fondo -->
-    <div class="absolute inset-0 bg-black bg-opacity-40"></div>
+    :style="`background-image: url(${fondo})`">
     
-    <!-- Contenido principal -->
+    <!-- <div class="absolute inset-0 bg-black bg-opacity-40"></div> -->
+    
     <div class="relative z-10 flex items-center justify-center min-h-screen p-4">
-      <div class="bg-white/90 rounded-3xl p-6 w-11/12 max-w-md text-center shadow-lg backdrop-blur-sm">
-        
-        <!-- Header con logos -->
+      <div class="bg-white/50 rounded-3xl p-6 w-11/12 max-w-md text-center shadow-lg backdrop-blur-sm">
         <div class="flex items-center justify-between mb-8">
-          <!-- Logo Festa -->
           <div class="flex-1 text-center">
-            <img src="../festa-logo.jpg" alt="Festa Restobar" class="h-12 mx-auto mb-2" />
-            <div class="text-2xl font-bold tracking-wider text-gray-800">
-              F E S T A
-            </div>
-            <div class="text-xs tracking-widest text-gray-600 font-light">
-              R E S T O B A R
-            </div>
+            <img :src="festaLogo" alt="Festa Logo" class="h-24" />
           </div>
-          
-          <!-- Logo Papo's -->
           <div class="flex-shrink-0 ml-4">
-            <img src="../papos-logo.jpg" alt="Papo's Lounge" class="h-16 w-16 rounded-full" />
+            <img :src="paposLogo" alt="Papos Logo" class="h-24" />
           </div>
         </div>
-
-        <!-- Botones del menú -->
         <div class="space-y-4">
-          <!-- Carta comida -->
-          <button class="w-full bg-amber-800 hover:bg-amber-900 text-white font-bold py-4 px-6 rounded-full text-lg transition-colors duration-200 shadow-lg">
+          <button class="w-full bg-amber-800/90 hover:bg-amber-900 text-white font-bold py-4 px-6 rounded-full text-lg transition-colors duration-200 shadow-lg">
             Carta comida
           </button>
-
-          <!-- Carta cócteles -->
-          <button class="w-full bg-amber-800 hover:bg-amber-900 text-white font-bold py-4 px-6 rounded-full text-lg transition-colors duration-200 shadow-lg">
+          <button class="w-full bg-amber-800/90 hover:bg-amber-900 text-white font-bold py-4 px-6 rounded-full text-lg transition-colors duration-200 shadow-lg">
             Carta cócteles
           </button>
 
           <!-- Promos del día -->
-          <button class="w-full bg-amber-800 hover:bg-amber-900 text-white font-bold py-4 px-6 rounded-full text-lg transition-colors duration-200 shadow-lg">
+          <button class="w-full bg-amber-800/90 hover:bg-amber-900 text-white font-bold py-4 px-6 rounded-full text-lg transition-colors duration-200 shadow-lg">
             Promos del día
           </button>
 
           <!-- Reservas y Delivery -->
           <div class="flex space-x-3">
-            <button class="flex-1 bg-white border-2 border-amber-800 text-amber-800 font-bold py-3 px-4 rounded-full text-base hover:bg-amber-50 transition-colors duration-200">
+            <button class="flex-1 bg-white border-2 border-amber-800/90 text-amber-800 font-bold py-3 px-4 rounded-full text-base hover:bg-amber-50 transition-colors duration-200">
               Reservas
             </button>
-            <button class="flex-1 bg-white border-2 border-amber-800 text-amber-800 font-bold py-3 px-4 rounded-full text-base hover:bg-amber-50 transition-colors duration-200">
+            <button class="flex-1 bg-white border-2 border-amber-800/90 text-amber-800 font-bold py-3 px-4 rounded-full text-base hover:bg-amber-50 transition-colors duration-200">
               Delivery
             </button>
           </div>
 
           <!-- Encuesta -->
-          <button class="w-full bg-amber-800 hover:bg-amber-900 text-white font-bold py-4 px-6 rounded-full text-lg transition-colors duration-200 shadow-lg">
+          <button class="w-full bg-amber-800/90 hover:bg-amber-900 text-white font-bold py-4 px-6 rounded-full text-lg transition-colors duration-200 shadow-lg">
             ENCUESTA
           </button>
         </div>
@@ -85,11 +68,20 @@
 </template>
 
 <script lang="ts">
-import fondo from '@/assets/fondo.jpg'
 import { defineComponent } from 'vue'
+import festaLogo from '@/assets/festa-logo.jpg'
+import paposLogo from '@/assets/papos-logo.jpg'
+import fondo from '@/assets/fondo.jpg'
 
 export default defineComponent({
   name: 'FestaMenu',
+  data() {
+    return {
+      festaLogo,
+      paposLogo,
+      fondo
+    }
+  },
   methods: {
     handleMenuClick(section: string) {
       console.log(`Navegando a: ${section}`)
