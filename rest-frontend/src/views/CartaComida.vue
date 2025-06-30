@@ -133,7 +133,12 @@ export default {
       categoriaActiva: 'todos',
       loading: true,
       error: null,
-      mostrarToast: false
+      mostrarToast: false,
+      // Configuración de la API
+      apiConfig: {
+        baseUrl: import.meta.env.VUE_APP_API_URL || 'http://192.168.1.10:3000',
+        timeout: 10000
+      }
     }
   },
   async mounted() {
@@ -145,26 +150,100 @@ export default {
         this.loading = true;
         this.error = null;
         
-        const response = await fetch('http://192.168.1.10:3000/api/productos');
+        const url = `${this.apiConfig.baseUrl}/productos/tipo-carta/1`;
+        console.log('🔍 Intentando cargar desde:', url);
         
-        if (!response.ok) {
-          throw new Error(`Error ${response.status}: ${response.statusText}`);
-        }
+        // URL para NestJS
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          timeout: this.apiConfig.timeout
+        });
+        
+        console.log('📡 Status de respuesta:', response.status);
+        console.log('📡 Response OK:', response.ok);
+        
+        // if (!response.ok) {
+        //   // Si es 404, probemos con /api/productos
+        //   if (response.status === 404) {
+        //     console.log('Probando con /api/productos...');
+        //     const altResponse = await fetch(`${this.apiConfig.baseUrl}/api/productos`);
+        //     if (altResponse.ok) {
+        //       const altData = await altResponse.json();
+        //       console.log('✅ Datos obtenidos con /api/productos:', altData);
+        //       this.procesarDatos(altData);
+        //       return;
+        //     }
+        //   }
+        //   throw new Error(`Error ${response.status}: ${response.statusText}`);
+        // }
         
         const data = await response.json();
-        this.productos = data;
-        this.productosFiltrados = data;
+        console.log('Datos recibidos:', data);
+        console.log('Tipo de datos:', typeof data);
+        console.log('Es array:', Array.isArray(data));
         
-        // Extraer categorías únicas
-        this.categorias = [...new Set(data.map(p => p.categoria_nombre))];
-
+        this.procesarDatos(data);
         
       } catch (error) {
         console.error('Error al cargar productos:', error);
-        this.error = error.message;
+        
+        // Manejo de errores más específico
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+          this.error = `No se pudo conectar con el servidor en ${this.apiConfig.baseUrl}. Verifica que el backend esté ejecutándose.`;
+        } else if (error.message.includes('404')) {
+          this.error = `Endpoint /productos no encontrado en ${this.apiConfig.baseUrl}. ¿Existe el controller?`;
+        } else if (error.message.includes('500')) {
+          this.error = 'Error interno del servidor. Verifica los logs del backend.';
+        } else {
+          this.error = error.message || 'Error desconocido al cargar productos';
+        }
       } finally {
         this.loading = false;
       }
+    },
+
+    procesarDatos(data) {
+      // Validar que la respuesta sea un array
+      if (!Array.isArray(data)) {
+        console.log('⚠️ Los datos no son un array:', data);
+        throw new Error('La respuesta del servidor no es un array válido');
+      }
+      
+      if (data.length === 0) {
+        console.log('⚠️ El array está vacío');
+        this.productos = [];
+        this.productosFiltrados = [];
+        this.categorias = [];
+        return;
+      }
+      
+      console.log('📋 Primer producto (original):', data[0]);
+      
+      // Adaptar los datos al formato esperado por el componente
+      const productosAdaptados = data.map(producto => ({
+        id: producto.id,
+        nombre: producto.nombre,
+        descripcion: producto.descripcion,
+        precio: producto.precio,
+        imagen_url: producto.imagenUrl, // Mapear imagenUrl a imagen_url
+        categoria_nombre: producto.categoria?.nombre || 'Sin categoría', // Mapear categoria.nombre a categoria_nombre
+        estado: producto.estado
+      }));
+      
+      console.log('📋 Primer producto (adaptado):', productosAdaptados[0]);
+      
+      this.productos = productosAdaptados;
+      this.productosFiltrados = productosAdaptados;
+      
+      // Extraer categorías únicas
+      this.categorias = [...new Set(productosAdaptados.map(p => p.categoria_nombre))];
+      
+      console.log('✅ Productos cargados:', productosAdaptados.length);
+      console.log('🏷️ Categorías encontradas:', this.categorias);
     },
 
     filtrarPorCategoria(categoria) {
@@ -177,22 +256,40 @@ export default {
       }
     },
 
-    agregarAlCarrito(producto) {
-      // Aquí puedes implementar la lógica del carrito
-      console.log('Agregando al carrito:', producto);
-      
-      // Mostrar toast de confirmación
-      this.mostrarToast = true;
-      setTimeout(() => {
-        this.mostrarToast = false;
-      }, 3000);
-      
-      // Emitir evento al componente padre si es necesario
-      this.$emit('producto-agregado', producto);
+    async agregarAlCarrito(producto) {
+      try {
+        // Si tienes un endpoint para agregar al carrito en NestJS
+        // const response = await fetch(`${this.apiConfig.baseUrl}/carrito`, {
+        //   method: 'POST',
+        //   headers: {
+        //     'Content-Type': 'application/json',
+        //   },
+        //   body: JSON.stringify({
+        //     producto_id: producto.id,
+        //     cantidad: 1
+        //   })
+        // });
+        
+        // Por ahora solo log local
+        console.log('Agregando al carrito:', producto);
+        
+        // Mostrar toast de confirmación
+        this.mostrarToast = true;
+        setTimeout(() => {
+          this.mostrarToast = false;
+        }, 3000);
+        
+        // Emitir evento al componente padre si es necesario
+        this.$emit('producto-agregado', producto);
+        
+      } catch (error) {
+        console.error('Error al agregar producto al carrito:', error);
+      }
     },
 
     formatearPrecio(precio) {
-      return parseFloat(precio).toFixed(2);
+      const precioNumerico = parseFloat(precio);
+      return isNaN(precioNumerico) ? '0.00' : precioNumerico.toFixed(2);
     },
 
     getEmojiCategoria(categoria) {
@@ -215,7 +312,20 @@ export default {
         'cena': '🌙'
       };
       
-      return emojis[categoria.toLowerCase()] || '🍽️';
+      return emojis[categoria?.toLowerCase()] || '🍽️';
+    },
+
+    // Método para recargar productos
+    async recargarProductos() {
+      await this.cargarProductos();
+    },
+
+    // Verificar si los datos contienen productos
+    tieneProductos(data) {
+      if (Array.isArray(data)) {
+        return data.some(item => item.nombre || item.precio);
+      }
+      return false;
     }
   }
 }
@@ -248,5 +358,15 @@ html {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #d97706;
+}
+
+/* Estilos adicionales para mejor UX */
+.loading-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 </style>

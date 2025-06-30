@@ -1,0 +1,146 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Categoria {
+  id          Int        @id @default(autoincrement())
+  nombre      String     @db.VarChar(100)
+  descripcion String?    @db.Text
+  icono_url   String?    @db.VarChar(255)
+  tipo_carta  Int        @default(1)
+  productos   Producto[]
+
+  @@map("categorias")
+}
+
+model Producto {
+  id             Int             @id @default(autoincrement())
+  nombre         String          @db.VarChar(100)
+  descripcion    String?         @db.Text
+  precio         Decimal         @db.Decimal(10, 2)
+  imagenUrl      String?         @map("imagen_url") @db.VarChar(255)
+  estado         Boolean         @default(true)
+  categoriaId    Int?            @map("categoria_id")
+  detallePedidos DetallePedido[]
+  categoria      Categoria?      @relation(fields: [categoriaId], references: [id])
+
+  @@index([categoriaId], map: "productos_categoria_id_fkey")
+  @@map("productos")
+}
+
+model Promocion {
+  id          Int       @id @default(autoincrement())
+  titulo      String    @db.VarChar(100)
+  descripcion String?   @db.Text
+  descuento   Decimal?  @db.Decimal(5, 2)
+  fechaInicio DateTime? @map("fecha_inicio") @db.Date
+  fechaFin    DateTime? @map("fecha_fin") @db.Date
+  estado      Boolean   @default(true)
+
+  @@map("promociones")
+}
+
+model Reserva {
+  id            Int           @id @default(autoincrement())
+  nombreCliente String        @map("nombre_cliente") @db.VarChar(100)
+  telefono      String?       @db.VarChar(20)
+  fechaReserva  DateTime      @map("fecha_reserva") @db.Date
+  horaReserva   DateTime      @map("hora_reserva") @db.Time(0)
+  personas      Int
+  comentario    String?       @db.Text
+  estado        EstadoReserva @default(pendiente)
+
+  @@map("reservas")
+}
+
+model Cart {
+  id        String     @id @default(cuid())
+  sessionId String     @unique(map: "sessionId")
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @default(now()) @updatedAt
+  items     CartItem[]
+  
+  // Relación con Pedido
+  pedidos   Pedido[]
+
+  @@index([sessionId], map: "idx_carts_sessionId")
+  @@map("carts")
+}
+
+model CartItem {
+  id       String  @id @default(cuid())
+  cartId   String
+  itemId   String  // Este será el productoId
+  itemType String  // Siempre será "producto" en tu caso
+  name     String  @db.VarChar(255)
+  price    Decimal @db.Decimal(10, 2)
+  quantity Int     @default(1)
+  image    String? @db.VarChar(500)
+  cart     Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_cart_items_cart")
+
+  @@index([cartId], map: "idx_cart_items_cartId")
+  @@index([itemId], map: "idx_cart_items_itemId")
+  @@index([itemType], map: "idx_cart_items_itemType")
+  @@map("cart_items")
+}
+
+model Pedido {
+  id             Int             @id @default(autoincrement())
+  nombreCliente  String          @map("nombre_cliente") @db.VarChar(100)
+  telefono       String?         @db.VarChar(20)
+  direccion      String?         @db.Text
+  mesa           String?         @db.VarChar(10)
+  tipo           TipoPedido
+  fechaPedido    DateTime        @default(now()) @map("fecha_pedido")
+  estado         EstadoPedido    @default(pendiente)
+  total          Decimal         @db.Decimal(10, 2)
+  notas          String?         @db.Text
+  
+  // Relación con Cart (opcional - para mantener referencia)
+  cartId         String?         @map("cart_id")
+  cart           Cart?           @relation(fields: [cartId], references: [id], onDelete: SetNull)
+  
+  // Relación con DetallePedido
+  detallePedidos DetallePedido[]
+
+  @@index([cartId], map: "idx_pedidos_cartId")
+  @@map("pedidos")
+}
+
+model DetallePedido {
+  id             Int      @id @default(autoincrement())
+  pedidoId       Int      @map("pedido_id")
+  productoId     Int      @map("producto_id")
+  cantidad       Int
+  precioUnitario Decimal  @map("precio_unitario") @db.Decimal(10, 2)
+  pedido         Pedido   @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  producto       Producto @relation(fields: [productoId], references: [id])
+
+  @@index([pedidoId], map: "detalle_pedido_pedido_id_fkey")
+  @@index([productoId], map: "detalle_pedido_producto_id_fkey")
+  @@map("detalle_pedido")
+}
+
+enum TipoPedido {
+  mesa
+  delivery
+}
+
+enum EstadoPedido {
+  pendiente
+  en_proceso
+  servido
+  enviado
+  cancelado
+}
+
+enum EstadoReserva {
+  pendiente
+  confirmada
+  cancelada
+}
